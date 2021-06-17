@@ -6,6 +6,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 
 @Mod.EventBusSubscriber( modid = Reference.MOD_ID )
 public class EventHandler
@@ -24,9 +25,9 @@ public class EventHandler
 //        System.out.println( ConfefegMod.isLocal() + " " + ConfefegMod.isServerLocal() );
     }
 
-    @SubscribeEvent
-    public static void worldTickEvent( TickEvent.WorldTickEvent event )
-    {
-//        System.out.println( ConfefegMod.isLocal() + " " + ConfefegMod.isServerLocal() );
-    }
+//    @SubscribeEvent
+//    public static void worldTickEvent( FMLServerAboutToStartEvent event )
+//    {
+//        System.out.println( "a" );
+//    }
 }
