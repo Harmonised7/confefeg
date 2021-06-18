@@ -1,5 +1,6 @@
 package harmonised.confefeg.client;
 
+import harmonised.confefeg.config.Confefeger;
 import harmonised.confefeg.util.Reference;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -13,10 +14,11 @@ public class ClientHandler
     private static boolean isServerLocal = false;
 
     @SubscribeEvent
-    public static void worldLoad( ClientPlayerNetworkEvent.LoggedInEvent event )
+    public static void clientLoggedIn( ClientPlayerNetworkEvent.LoggedInEvent event )
     {
         if( event.getPlayer().world.isRemote() )
             isServerLocal = Minecraft.getInstance().isIntegratedServerRunning();
+        Confefeger.parseAllConfefegers();
     }
 
     public static boolean isServerLocal()

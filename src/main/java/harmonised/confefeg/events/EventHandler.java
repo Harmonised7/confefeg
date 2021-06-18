@@ -1,12 +1,12 @@
 package harmonised.confefeg.events;
 
+import harmonised.confefeg.config.ExampleConfefe;
 import harmonised.confefeg.util.Reference;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 
 @Mod.EventBusSubscriber( modid = Reference.MOD_ID )
 public class EventHandler
@@ -16,6 +16,7 @@ public class EventHandler
     {
         if( event.getEntityLiving() instanceof PlayerEntity )
         {
+            ExampleConfefe.confefeger.saveConfefeg();
         }
     }
 

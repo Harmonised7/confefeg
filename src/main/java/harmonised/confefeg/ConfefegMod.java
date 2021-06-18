@@ -1,7 +1,7 @@
 package harmonised.confefeg;
 
 import harmonised.confefeg.client.ClientHandler;
-import harmonised.confefeg.config.TestConfefe;
+import harmonised.confefeg.config.ExampleConfefe;
 import harmonised.confefeg.events.EventHandler;
 import harmonised.confefeg.network.NetworkHandler;
 import harmonised.confefeg.util.Reference;
@@ -10,7 +10,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
@@ -43,7 +42,7 @@ public class ConfefegMod
     {
         NetworkHandler.registerPackets();
         MinecraftForge.EVENT_BUS.register( EventHandler.class );
-        TestConfefe.init();
+        ExampleConfefe.init();
     }
 
     private void clientLoading( FMLClientSetupEvent event )
