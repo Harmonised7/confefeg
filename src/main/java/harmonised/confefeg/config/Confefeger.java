@@ -1,6 +1,9 @@
 package harmonised.confefeg.config;
 
+import harmonised.confefeg.network.MessageConfig;
+import harmonised.confefeg.network.NetworkHandler;
 import harmonised.confefeg.util.Reference;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
@@ -30,7 +33,7 @@ public class Confefeger
     private Confefeger( String confefeName )
     {
         this.confefegName = confefeName;
-        parseConfefeg();
+        parseConfefegs();
     }
 
     public ConfefeBuilder build( String name )
@@ -38,7 +41,7 @@ public class Confefeger
         return new Confefeger.ConfefeBuilder( this, name );
     }
 
-    public void saveConfefeg()
+    public void saveConfefegs()
     {
         String tomlConfig = getConfefegsAsToml();
 
@@ -64,12 +67,12 @@ public class Confefeger
         }
     }
 
-    public void parseConfefeg()
+    public void parseConfefegs()
     {
         parsedConfefeg.clear();
         File configFile = getConfigFile();
         if( !configFile.exists() )
-            saveConfefeg();
+            saveConfefegs();
         try
         (
             FileInputStream inputStream = new FileInputStream( configFile );
@@ -94,6 +97,14 @@ public class Confefeger
         catch( IOException e )
         {
             LOGGER.error( "Error parsing Confefeg: " + configFile.getPath(), e );
+        }
+    }
+
+    public void syncConfefegs( ServerPlayerEntity player )
+    {
+        for( Confefeger.Confefeg confefeg : getConfefegs().values() )
+        {
+            NetworkHandler.sendToPlayer( new MessageConfig( Confefeger.confefegToNBT( confefeg ) ), player );
         }
     }
 
@@ -136,22 +147,17 @@ public class Confefeger
                     confefeg.set( value );
                 else
                 {
-                    double parsedNumber = Double.parseDouble( parsedValueString );
-                    if( !Double.isNaN( parsedNumber ) )
-                    {
-                        parsedNumber = Math.max( (double) confefeg.min, Math.min( (double) confefeg.max, parsedNumber ) );
-                        if( value instanceof Integer )
-                            confefeg.set( (int) parsedNumber );
-                        else if( value instanceof Float )
-                            confefeg.set( (float) parsedNumber );
-                        else if( value instanceof Double )
-                            confefeg.set( parsedNumber );
-                    }
+                    if( value instanceof Integer )
+                        confefeg.set( Math.max( (int) confefeg.min, Math.min( (int) confefeg.max, Integer.parseInt( parsedValueString ) ) ) );
+                    else if( value instanceof Float )
+                        confefeg.set( Math.max( (float) confefeg.min, Math.min( (float) confefeg.max, Float.parseFloat( parsedValueString ) ) ) );
+                    else if( value instanceof Double )
+                        confefeg.set( Math.max( (double) confefeg.min, Math.min( (double) confefeg.max, Double.parseDouble( parsedValueString ) ) ) );
                 }
             }
             catch( Exception e )
             {
-                LOGGER.warn( "Invalid \""+ confefeg.name + "\" Confefe \"" + parsedValueString + "\"" );
+                LOGGER.warn( "Invalid \""+ confefeg.name + "\" Confefe \"" + parsedValueString + "\"", e );
             }
         }
         LOGGER.info( "Loaded Confefeg \"" + confefeg.name + "\" as " + confefeg.value );
@@ -162,9 +168,14 @@ public class Confefeger
         return confefegs.getOrDefault( confefegName, null );
     }
 
+    public Map<String, Confefeg> getConfefegs()
+    {
+        return confefegs;
+    }
+
     public void reloadConfefegs()
     {
-        parseConfefeg();
+        parseConfefegs();
         for( Confefeg confefeg : confefegs.values() )
         {
             loadConfefeg( confefeg );
@@ -172,12 +183,29 @@ public class Confefeger
     }
 
     //Static Methods
+    public static void syncAllConfefegs( ServerPlayerEntity player )
+    {
+        for( Confefeger confefeger : confefegers.values() )
+        {
+            confefeger.syncConfefegs( player );
+        }
+    }
+
     public static void saveAllConfefegers()
     {
         for( Confefeger confefeger : confefegers.values() )
         {
-            confefeger.parseConfefeg();
-            confefeger.saveConfefeg();
+            confefeger.parseConfefegs();
+            confefeger.saveConfefegs();
+        }
+    }
+
+    public static void reloadAllConfefegs()
+    {
+        for( Confefeger confefeger : confefegers.values() )
+        {
+            confefeger.parseConfefegs();
+            confefeger.reloadConfefegs();
         }
     }
 
@@ -195,7 +223,7 @@ public class Confefeger
         output += "#Description:\t" + confefeg.description + "\n";
         if( !( confefeg.value instanceof String ) )
         output += "#Range:\t" + confefeg.min + "\tto\t" + confefeg.max + "\n";
-        output += confefeg.name + "=" + confefeg.value + "\n";
+        output += confefeg.name + "=" + confefeg.localValue + "\n";
 
         return output;
     }
@@ -208,7 +236,11 @@ public class Confefeger
         nbt.putString( "name", confefeg.name );
         if( confefeg.value instanceof String )
             nbt.putString( "value", (String) confefeg.value );
-        else
+        else if( confefeg.value instanceof Integer )
+            nbt.putDouble( "value", (int) confefeg.value );
+        else if( confefeg.value instanceof Float )
+            nbt.putDouble( "value", (float) confefeg.value );
+        else if( confefeg.value instanceof Double )
             nbt.putDouble( "value", (double) confefeg.value );
 
         return nbt;
@@ -290,7 +322,7 @@ public class Confefeger
         public final Confefeger confefeger;
         public final String name, description, category;
         public final Side side;
-        private T value, min, max;
+        private T value, localValue, min, max;
 
         public Confefeg( Confefeger confefeger, String name, String description, String category, Side side, T value, T min, T max )
         {
@@ -300,6 +332,7 @@ public class Confefeger
             this.category = category;
             this.side = side;
             this.value = value;
+            this.localValue = value;
             this.min = min;
             this.max = max;
             confefeger.confefegs.put( name, this );
@@ -314,6 +347,7 @@ public class Confefeger
             this.category = category;
             this.side = side;
             this.value = value;
+            this.localValue = value;
             this.min = value;
             this.max = value;
             confefeger.confefegs.put( name, this );
@@ -325,14 +359,31 @@ public class Confefeger
             return value;
         }
 
+        public T getLocal()
+        {
+            return localValue;
+        }
+        
         public void set( T value )
         {
             this.value = value;
-            confefeger.saveConfefeg();
-            if( this.side == Side.COMMON )
-            {
-                //Send packet to set config on server side
-            }
+            this.localValue = value;
+            confefeger.saveConfefegs();
+//            if( this.side == Side.COMMON )
+//            {
+                //Send packet to set config from to either side?
+//            }
+        }
+
+        /**
+         * This should only be used from a packet received on client.
+         * This method sets the value, without disturbing the localValue.
+         * @param value
+         */
+        @Deprecated
+        public void setFromServer( T value )
+        {
+            this.value = value;
         }
     }
 }

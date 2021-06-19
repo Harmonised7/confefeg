@@ -51,17 +51,21 @@ public class MessageConfig
                 {
                     Object value = confefeg.get();
                     if( value instanceof Integer )
-                        confefeg.set( nbt.getInt( "value" ) );
+                        confefeg.setFromServer( nbt.getInt( "value" ) );
                     else if( value instanceof Float )
-                        confefeg.set( nbt.getFloat( "value" ) );
+                        confefeg.setFromServer( nbt.getFloat( "value" ) );
                     else if( value instanceof Double )
-                        confefeg.set( nbt.getDouble( "value" ) );
+                        confefeg.setFromServer( nbt.getDouble( "value" ) );
                     else if( value instanceof String )
-                        confefeg.set( nbt.getString( "value" ) );
+                        confefeg.setFromServer( nbt.getString( "value" ) );
                     else
                         LOGGER.error( "Received an invalid type Config! How!?" );
                 }
+                else
+                    LOGGER.error( "Confefeg \"" + nbt.getString( "name" ) + "\" not found in Confefeger \"" + nbt.getString( "key" ) + "\"! Make sure your Client and Server mods are synced!" );
             }
+            else
+                LOGGER.error( "Confefeger \"" + nbt.getString( "key" ) + "\" not found! Make sure your Client and Server mods are synced!" );
         });
         ctx.get().setPacketHandled( true );
     }
