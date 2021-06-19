@@ -18,7 +18,7 @@ public class ClientHandler
     {
         if( event.getPlayer().world.isRemote() )
             isServerLocal = Minecraft.getInstance().isIntegratedServerRunning();
-        Confefeger.parseAllConfefegers();
+        Confefeger.saveAllConfefegers();
     }
 
     public static boolean isServerLocal()

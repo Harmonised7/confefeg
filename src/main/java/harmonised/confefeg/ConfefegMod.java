@@ -34,15 +34,7 @@ public class ConfefegMod
 
     public ConfefegMod()
     {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener( this::modsLoading );
         FMLJavaModLoadingContext.get().getModEventBus().addListener( this::clientLoading );
-    }
-
-    private void modsLoading( FMLCommonSetupEvent event )
-    {
-        NetworkHandler.registerPackets();
-        MinecraftForge.EVENT_BUS.register( EventHandler.class );
-        ExampleConfefe.init();
     }
 
     private void clientLoading( FMLClientSetupEvent event )

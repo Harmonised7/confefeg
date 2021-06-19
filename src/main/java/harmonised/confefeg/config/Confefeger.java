@@ -1,6 +1,7 @@
 package harmonised.confefeg.config;
 
 import harmonised.confefeg.util.Reference;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -14,31 +15,22 @@ import java.util.stream.Collectors;
 
 public class Confefeger
 {
+    //Static Fields
     public static final Logger LOGGER = LogManager.getLogger();
 
-    private static Map<String, Confefeger> confefegers = new HashMap<>();
+    public static final Map<String, Confefeger> confefegers = new HashMap<>();
+
+    //Confefeger Fields
     public final String confefegName;
 
     private Map<String, Confefeg> confefegs = new HashMap<>();
     private Map<String, String> parsedConfefeg = new HashMap<>();
 
-    public static void parseAllConfefegers()
-    {
-        for( Confefeger confefeger : confefegers.values() )
-        {
-            confefeger.parseConfefeg();
-        }
-    }
-
-    public static Confefeger registerConfefeg( String confefeName )
-    {
-        Confefeger confefeger = new Confefeger( confefeName );
-        confefegers.put( confefeName, confefeger );
-        return confefeger;
-    }
+    //Confefeger Methods
     private Confefeger( String confefeName )
     {
         this.confefegName = confefeName;
+        parseConfefeg();
     }
 
     public ConfefeBuilder build( String name )
@@ -74,6 +66,7 @@ public class Confefeger
 
     public void parseConfefeg()
     {
+        parsedConfefeg.clear();
         File configFile = getConfigFile();
         if( !configFile.exists() )
             saveConfefeg();
@@ -126,21 +119,106 @@ public class Confefeger
         return stringBuilder.toString();
     }
 
+    public File getConfigFile()
+    {
+        return FMLPaths.CONFIGDIR.get().resolve( confefegName + ".toml" ).toFile();
+    }
+
+    public void loadConfefeg( Confefeg confefeg )
+    {
+        String parsedValueString = confefeg.confefeger.parsedConfefeg.get( confefeg.name );
+        if( parsedValueString != null )
+        {
+            try
+            {
+                Object value = confefeg.value;
+                if( value instanceof String )
+                    confefeg.set( value );
+                else
+                {
+                    double parsedNumber = Double.parseDouble( parsedValueString );
+                    if( !Double.isNaN( parsedNumber ) )
+                    {
+                        parsedNumber = Math.max( (double) confefeg.min, Math.min( (double) confefeg.max, parsedNumber ) );
+                        if( value instanceof Integer )
+                            confefeg.set( (int) parsedNumber );
+                        else if( value instanceof Float )
+                            confefeg.set( (float) parsedNumber );
+                        else if( value instanceof Double )
+                            confefeg.set( parsedNumber );
+                    }
+                }
+            }
+            catch( Exception e )
+            {
+                LOGGER.warn( "Invalid \""+ confefeg.name + "\" Confefe \"" + parsedValueString + "\"" );
+            }
+        }
+        LOGGER.info( "Loaded Confefeg \"" + confefeg.name + "\" as " + confefeg.value );
+    }
+
+    public Confefeg getConfefeg( String confefegName )
+    {
+        return confefegs.getOrDefault( confefegName, null );
+    }
+
+    public void reloadConfefegs()
+    {
+        parseConfefeg();
+        for( Confefeg confefeg : confefegs.values() )
+        {
+            loadConfefeg( confefeg );
+        }
+    }
+
+    //Static Methods
+    public static void saveAllConfefegers()
+    {
+        for( Confefeger confefeger : confefegers.values() )
+        {
+            confefeger.parseConfefeg();
+            confefeger.saveConfefeg();
+        }
+    }
+
+    public static Confefeger registerConfefeg( String confefeName )
+    {
+        Confefeger confefeger = new Confefeger( confefeName );
+        confefegers.put( confefeName, confefeger );
+        return confefeger;
+    }
+
     public static String generateConfefegString( Confefeg confefeg )
     {
         String output = "";
 
-        output += "#Description\t" + confefeg.description + "\n";
+        output += "#Description:\t" + confefeg.description + "\n";
         if( !( confefeg.value instanceof String ) )
-        output += "#Range\t" + confefeg.min + "\tto\t" + confefeg.max + "\n";
+        output += "#Range:\t" + confefeg.min + "\tto\t" + confefeg.max + "\n";
         output += confefeg.name + "=" + confefeg.value + "\n";
 
         return output;
     }
 
-    public File getConfigFile()
+    public static CompoundNBT confefegToNBT( Confefeg confefeg )
     {
-        return FMLPaths.CONFIGDIR.get().resolve( confefegName + ".toml" ).toFile();
+        CompoundNBT nbt = new CompoundNBT();
+
+        nbt.putString( "key", confefeg.confefeger.confefegName );
+        nbt.putString( "name", confefeg.name );
+        if( confefeg.value instanceof String )
+            nbt.putString( "value", (String) confefeg.value );
+        else
+            nbt.putDouble( "value", (double) confefeg.value );
+
+        return nbt;
+    }
+
+    //Others
+    public enum Side
+    {
+        LOCAL,
+        COMMON
     }
 
     public static class ConfefeBuilder
@@ -167,66 +245,31 @@ public class Confefeger
             this.category = category;
             return this;
         }
-        
+
         public ConfefeBuilder side( Side side )
         {
             this.side = side;
             return this;
         }
 
-        public void addConfefeg( Confefeg confefeg )
-        {
-            String parsedValueString = confefeg.confefeger.parsedConfefeg.get( confefeg.name );
-            if( parsedValueString != null )
-            {
-                Object value = confefeg.value;
-                if( value instanceof Integer )
-                    confefeg.set( Integer.parseInt( parsedValueString ) );
-                else if( value instanceof Float )
-                {
-                    Float parsedValue = Float.parseFloat( parsedValueString );
-                    if( !parsedValue.isNaN() )
-                        confefeg.set( parsedValue );
-                }
-                else if( value instanceof Double )
-                {
-                    Double parsedValue = Double.parseDouble( parsedValueString );
-                    if( !parsedValue.isNaN() )
-                        confefeg.set( parsedValue );
-                }
-                else if( value instanceof String )
-                    confefeg.set( value );
-            }
-            LOGGER.info( "Loaded Confefeg \"" + confefeg.name + "\" as " + confefeg.value );
-            confefeger.confefegs.put( confefeg.name, confefeg );
-        }
-
         public Confefeg<Double> submit( double value, double min, double max )
         {
-            Confefeg<Double> confefeg = new Confefeg<>( confefeger, name, description, category, side, value, min, max );
-            addConfefeg( confefeg );
-            return confefeg;
+            return new Confefeg<>( confefeger, name, description, category, side, value, min, max );
         }
 
         public Confefeg<Float> submit( float value, float min, float max )
         {
-            Confefeg<Float> confefeg = new Confefeg<>( confefeger, name, description, category, side, value, min, max );
-            addConfefeg( confefeg );
-            return confefeg;
+            return new Confefeg<>( confefeger, name, description, category, side, value, min, max );
         }
 
         public Confefeg<Long> submit( long value, long min, long max )
         {
-            Confefeg<Long> confefeg = new Confefeg<>( confefeger, name, description, category, side, value, min, max );
-            addConfefeg( confefeg );
-            return confefeg;
+            return new Confefeg<>( confefeger, name, description, category, side, value, min, max );
         }
 
         public Confefeg<Integer> submit( int value, int min, int max )
         {
-            Confefeg<Integer> confefeg = new Confefeg<>( confefeger, name, description, category, side, value, min, max );
-            addConfefeg( confefeg );
-            return confefeg;
+            return new Confefeg<>( confefeger, name, description, category, side, value, min, max );
         }
 
 //        public Confefeg<Character> submit( char value )
@@ -238,16 +281,8 @@ public class Confefeger
 
         public Confefeg<String> submit( String value )
         {
-            Confefeg<String> confefeg = new Confefeg<>( confefeger, name, description, category, side, value );
-            addConfefeg( confefeg );
-            return confefeg;
+            return new Confefeg<>( confefeger, name, description, category, side, value );
         }
-    }
-
-    public enum Side
-    {
-        CLIENT,
-        COMMON
     }
 
     public static class Confefeg<T> implements Supplier<T>
@@ -267,6 +302,8 @@ public class Confefeger
             this.value = value;
             this.min = min;
             this.max = max;
+            confefeger.confefegs.put( name, this );
+            confefeger.loadConfefeg( this );
         }
 
         public Confefeg( Confefeger confefeger, String name, String description, String category, Side side, T value )
@@ -279,6 +316,7 @@ public class Confefeger
             this.value = value;
             this.min = value;
             this.max = value;
+            confefeger.confefegs.put( name, this );
         }
 
         @Override
