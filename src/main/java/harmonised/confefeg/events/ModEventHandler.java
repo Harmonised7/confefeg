@@ -1,6 +1,5 @@
 package harmonised.confefeg.events;
 
-import harmonised.confefeg.config.Confefeger;
 import harmonised.confefeg.config.ExampleConfefe;
 import harmonised.confefeg.network.NetworkHandler;
 import harmonised.confefeg.util.Reference;

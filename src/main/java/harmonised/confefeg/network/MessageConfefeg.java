@@ -9,36 +9,36 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.function.Supplier;
 
-public class MessageConfig
+public class MessageConfefeg
 {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public CompoundNBT confefeg;
 
-    public MessageConfig( CompoundNBT config )
+    public MessageConfefeg(CompoundNBT config )
     {
         this.confefeg = config;
     }
 
-    public MessageConfig()
+    public MessageConfefeg()
     {
     }
 
-    public static MessageConfig decode(PacketBuffer buf )
+    public static MessageConfefeg decode(PacketBuffer buf )
     {
-        MessageConfig packet = new MessageConfig();
+        MessageConfefeg packet = new MessageConfefeg();
 
         packet.confefeg = buf.readCompoundTag();
 
         return packet;
     }
 
-    public static void encode(MessageConfig packet, PacketBuffer buf )
+    public static void encode(MessageConfefeg packet, PacketBuffer buf )
     {
         buf.writeCompoundTag( packet.confefeg );
     }
 
-    public static void handlePacket( MessageConfig packet, Supplier<NetworkEvent.Context> ctx )
+    public static void handlePacket(MessageConfefeg packet, Supplier<NetworkEvent.Context> ctx )
     {
         ctx.get().enqueueWork(() ->
         {

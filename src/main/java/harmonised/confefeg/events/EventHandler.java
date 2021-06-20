@@ -2,7 +2,7 @@ package harmonised.confefeg.events;
 
 import harmonised.confefeg.config.Confefeger;
 import harmonised.confefeg.config.ExampleConfefe;
-import harmonised.confefeg.network.MessageConfig;
+import harmonised.confefeg.network.MessageConfefeg;
 import harmonised.confefeg.network.NetworkHandler;
 import harmonised.confefeg.util.Reference;
 import net.minecraft.entity.player.PlayerEntity;
@@ -36,16 +36,10 @@ public class EventHandler
                 ExampleConfefe.confefeger.reloadConfefegs();
                 for( Confefeger.Confefeg confefeg : ExampleConfefe.confefeger.getConfefegs().values() )
                 {
-                    NetworkHandler.sendToPlayer( new MessageConfig( Confefeger.confefegToNBT( confefeg ) ), (ServerPlayerEntity) player );
+                    NetworkHandler.sendToPlayer( new MessageConfefeg( Confefeger.confefegToNBT( confefeg ) ), (ServerPlayerEntity) player );
                 }
             }
         }
-    }
-
-    @SubscribeEvent
-    public static void playerTickEvent( TickEvent.PlayerTickEvent event )
-    {
-//        System.out.println( ConfefegMod.isLocal() + " " + ConfefegMod.isServerLocal() );
     }
 
     @SubscribeEvent

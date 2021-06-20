@@ -1,6 +1,6 @@
 package harmonised.confefeg.config;
 
-import harmonised.confefeg.network.MessageConfig;
+import harmonised.confefeg.network.MessageConfefeg;
 import harmonised.confefeg.network.NetworkHandler;
 import harmonised.confefeg.util.Reference;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -104,7 +104,7 @@ public class Confefeger
     {
         for( Confefeger.Confefeg confefeg : getConfefegs().values() )
         {
-            NetworkHandler.sendToPlayer( new MessageConfig( Confefeger.confefegToNBT( confefeg ) ), player );
+            NetworkHandler.sendToPlayer( new MessageConfefeg( Confefeger.confefegToNBT( confefeg ) ), player );
         }
     }
 

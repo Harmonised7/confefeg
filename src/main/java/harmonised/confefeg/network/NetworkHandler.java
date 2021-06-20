@@ -14,9 +14,9 @@ public class NetworkHandler
     {
         int index = 0;
 
-        ConfefegMod.HANDLER.registerMessage( index++, MessageConfig.class, MessageConfig::encode, MessageConfig::decode, MessageConfig::handlePacket ); }
+        ConfefegMod.HANDLER.registerMessage( index++, MessageConfefeg.class, MessageConfefeg::encode, MessageConfefeg::decode, MessageConfefeg::handlePacket ); }
 
-    public static void sendToPlayer( MessageConfig packet, ServerPlayerEntity player )
+    public static void sendToPlayer(MessageConfefeg packet, ServerPlayerEntity player )
     {
         ConfefegMod.HANDLER.sendTo( packet, player.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT );
     }
